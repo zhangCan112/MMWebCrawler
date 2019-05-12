@@ -36,7 +36,7 @@ func ExampleScrape() {
 		price := webcrawler.WrapedString(s.Find(".tg-floor-item-wrap .tg-floor-price-new em").Text()).TrimSpace().FilterLineBreaks().Unwrap()
 		// saleCount, _ := s.Attr("data-static-join")
 
-		fmt.Printf("%s %s 价格：%s %s\n", title, subTitle, price)
+		fmt.Printf("%s %s 价格：%s \n", title, subTitle, price)
 	})
 	// Find the review items
 	// doc.Find(".sidebar-reviews article .content-block").Each(func(i int, s *goquery.Selection) {
