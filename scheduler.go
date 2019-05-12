@@ -19,12 +19,19 @@ var (
 func Push(req *Request) {
 	storeMux.Lock()
 	defer storeMux.Unlock()	
+	store = append(store, req)
 }
 
 // Pop 返回一个待处理的请求
 func Pop() *Request {
 	storeMux.Lock()
 	defer storeMux.Unlock()
+	if len(store) > 0 {
+		req:= store[0]
+		store = store[1:]
+		return req		
+	} 
+
 	return nil
 }
 
@@ -32,5 +39,5 @@ func Pop() *Request {
 // 这样这个请求再被push时将被忽略
 func Done(req *Request) {
 	historyMux.Lock()
-	defer historyMux.Unlock()
+	defer historyMux.Unlock()	
 }
