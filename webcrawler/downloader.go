@@ -1,5 +1,1 @@
 package webcrawler
-
-func Test()  {
-	
-}
