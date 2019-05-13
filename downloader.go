@@ -26,11 +26,44 @@ var (
 		"Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/535.24 (KHTML, like Gecko) Chrome/19.0.1055.1 Safari/535.24",
 		"Mozilla/5.0 (Windows NT 6.2; WOW64) AppleWebKit/535.24 (KHTML, like Gecko) Chrome/19.0.1055.1 Safari/535.24",
 	}
+	DefaultDownloader = NewDownloader()
 )
 
+// Downloader 下载器
+type Downloader struct {
+	Sender chan (*http.Response, error)
+}
+
+// RunDownloader启动默认的Downloader模块
+func RunDownloader(receiver <-chan string, sender chan<- *http.Response) {
+	DefaultDownloader.Run(receiver, sender)
+}
+
+func NewDownloader() *Downloader {
+	return &Downloader{
+		Sender: make(chan)
+	}
+}
+
+// Run 下载器开启工作模式
+func (dl *Downloader) Run(receiver <-chan string, sender chan<- *http.Response) {
+	dl.Receiver = receiver
+	dl.Sender = sender
+	go dl.work()
+}
+
+func (dl *Downloader) work() {
+	for {
+		select {
+		case <-dl.Receiver:
+		case dl.Sender <- nil:
+		}
+	}
+}
+
 // Get get请求的简单封装
-func Get(url string) (resp *http.Response, err error) {
-	req, err := NewRequest("GET", url)
+func get(url string) (resp *http.Response, err error) {
+	req, err := newRequest("GET", url)
 	if err != nil {
 		return nil, err
 	}
@@ -38,7 +71,7 @@ func Get(url string) (resp *http.Response, err error) {
 }
 
 // NewRequest 返回一个新的Request请求
-func NewRequest(method, url string) (*http.Request, error) {
+func newRequest(method, url string) (*http.Request, error) {
 	req, err := http.NewRequest(method, url, nil)
 
 	if err == nil {
@@ -51,4 +84,9 @@ func NewRequest(method, url string) (*http.Request, error) {
 func randomUserAgent() string {
 	idx := rand.Intn(len(userAgentList))
 	return userAgentList[idx]
+}
+
+// download 开启请求指定url的数据
+func download(url string) (res *http.Response, err error) {
+	return get(url)
 }
