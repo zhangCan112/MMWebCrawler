@@ -25,7 +25,13 @@ func TestSchedulerPushPop(t *testing.T) {
 	DefaultScheduler.Done(popurl)
 	DefaultScheduler.Push(popurl)
 	expect(t, len(DefaultScheduler.store), lastLen)
+}
 
+func TestSchedulerPopNull(t *testing.T) {
+	DefaultScheduler = NewScheduler()
+	url, ok := DefaultScheduler.Pop()
+	expect(t, ok, false)
+	expect(t, url, "")
 }
 
 func TestSchedulerDone(t *testing.T) {
@@ -45,5 +51,5 @@ func TestSchedulerHasDone(t *testing.T) {
 	url := "http://www.baidu.com"
 	DefaultScheduler.Done(url)
 
-	expect(t, DefaultScheduler.hasDone(url), true)
+	expect(t, DefaultScheduler.HasDone(url), true)
 }
