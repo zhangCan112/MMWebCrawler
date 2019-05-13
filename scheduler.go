@@ -8,47 +8,81 @@ import (
 	"sync"
 )
 
-var (
-	store      = make([]*Request, 100)
-	history    = make([]string, 100)
-	storeMux   sync.Mutex
-	historyMux sync.RWMutex
-)
+// DefaultScheduler 默认的全局调度器
+var DefaultScheduler = NewScheduler()
+
+// Scheduler URl调度器
+type Scheduler struct {
+	store    []string
+	history  []string
+	storeMux sync.RWMutex
+}
+
+// NewScheduler 返回一个Scheduler实例
+func NewScheduler() *Scheduler {
+	return &Scheduler{
+		store:   make([]string, 100)[0:0],
+		history: make([]string, 100)[0:0],
+	}
+}
 
 // Push 推入一个待处理的请求
-func Push(req *Request) {
-	storeMux.Lock()
-	defer storeMux.Unlock()
-	store = append(store, req)
+func (s *Scheduler) Push(url string) {
+	s.storeMux.Lock()
+	defer s.storeMux.Unlock()
+	if !s.hasDone(url) && !s.hasExist(url) {
+		s.store = append(s.store, url)
+	}
+}
+
+func (s *Scheduler) hasExist(url string) bool {
+	var isExist = false
+	for _, val := range s.store {
+		if val == url {
+			isExist = true
+			break
+		}
+	}
+	return isExist
 }
 
 // Pop 返回一个待处理的请求
-func Pop() *Request {
-	storeMux.Lock()
-	defer storeMux.Unlock()
-	if len(store) > 0 {
-		req := store[0]
-		store = store[1:]
-		return req
+func (s *Scheduler) Pop() (string, bool) {
+	s.storeMux.Lock()
+	defer s.storeMux.Unlock()
+	if len(s.store) > 0 {
+		url := s.store[0]
+		s.store = s.store[1:]
+		return url, true
 	}
 
-	return nil
+	return "", false
 }
 
 // Done 用来标记一个已完成的Request
 // 这样这个请求再被push时将被忽略
-func Done(req *Request) {
-	historyMux.Lock()
-	defer historyMux.Unlock()
-	if !hasDone(req) {
-		history = append(history)
+func (s *Scheduler) Done(url string) {
+	s.storeMux.Lock()
+	defer s.storeMux.Unlock()
+	if !s.hasDone(url) {
+		s.history = append(s.history, url)
 	}
 }
 
-func HasDone(req *Request) bool {
-	return false
+// HasDone url是否已经抓取过
+func (s *Scheduler) HasDone(url string) bool {
+	s.storeMux.RLock()
+	defer s.storeMux.RUnlock()
+	return s.hasDone(url)
 }
 
-func hasDone(req *Request) bool {
-	return true
+func (s *Scheduler) hasDone(url string) bool {
+	var isExist = false
+	for _, val := range s.history {
+		if val == url {
+			isExist = true
+			break
+		}
+	}
+	return isExist
 }
