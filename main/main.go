@@ -21,6 +21,7 @@ func test() {
 	fmt.Println(doc)
 	fmt.Println(url)
 	fmt.Println(err)
+	fmt.Println(doc.Text())
 }
 
 func ExampleScrape() {

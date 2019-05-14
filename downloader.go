@@ -89,8 +89,9 @@ func (dl *Downloader) download(url string) {
 }
 
 func wrapResult(doc *goquery.Document, url string, err error) func() (doc *goquery.Document, url string, err error) {
+	d, u, e := doc, url, err
 	return func() (doc *goquery.Document, url string, err error) {
-		return doc, url, err
+		return d, u, e
 	}
 }
 
