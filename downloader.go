@@ -1,8 +1,11 @@
 package webcrawler
 
 import (
+	"fmt"
 	"math/rand"
 	"net/http"
+
+	"github.com/PuerkitoBio/goquery"
 )
 
 var (
@@ -26,42 +29,72 @@ var (
 		"Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/535.24 (KHTML, like Gecko) Chrome/19.0.1055.1 Safari/535.24",
 		"Mozilla/5.0 (Windows NT 6.2; WOW64) AppleWebKit/535.24 (KHTML, like Gecko) Chrome/19.0.1055.1 Safari/535.24",
 	}
-	DefaultDownloader = NewDownloader()
+	defaultDownloader = NewDownloader()
 )
 
 // Downloader 下载器
 type Downloader struct {
-	Sender chan (*http.Response, error)
+	Sender chan func() (doc *goquery.Document, url string, err error)
 }
 
-// RunDownloader启动默认的Downloader模块
-func RunDownloader(receiver <-chan string, sender chan<- *http.Response) {
-	DefaultDownloader.Run(receiver, sender)
+// RunDownloader 启动默认的Downloader模块
+func RunDownloader() <-chan func() (doc *goquery.Document, url string, err error) {
+	return defaultDownloader.Run()
 }
 
+// Download 使用默认下载器请求指定url上的数据
+func Download(url string) {
+	defaultDownloader.Download(url)
+}
+
+// NewDownloader 返回一个新的Downloader实例
 func NewDownloader() *Downloader {
 	return &Downloader{
-		Sender: make(chan)
+		Sender: make(chan func() (doc *goquery.Document, url string, err error), 5),
 	}
 }
 
-// Run 下载器开启工作模式
-func (dl *Downloader) Run(receiver <-chan string, sender chan<- *http.Response) {
-	dl.Receiver = receiver
-	dl.Sender = sender
-	go dl.work()
+// Run 下载器开启工作模式,并返回一个闭包函数类型的通道用来外部接收完成下载的数据
+func (dl *Downloader) Run() <-chan func() (doc *goquery.Document, url string, err error) {
+	return dl.Sender
 }
 
-func (dl *Downloader) work() {
-	for {
-		select {
-		case <-dl.Receiver:
-		case dl.Sender <- nil:
-		}
+// Download 对制定url发起请求
+func (dl *Downloader) Download(url string) {
+	go dl.download(url)
+}
+
+// get 对制定url发起请求
+func (dl *Downloader) download(url string) {
+	res, err := get(url)
+	if err != nil {
+		dl.Sender <- wrapResult(nil, url, err)
+		return
+	}
+	defer res.Body.Close()
+
+	if res.StatusCode != 200 {
+		dl.Sender <- wrapResult(nil, url, fmt.Errorf("status code error: %d %s", res.StatusCode, res.Status))
+		return
+	}
+
+	// Load the HTML document
+	doc, err := goquery.NewDocumentFromReader(res.Body)
+	if err != nil {
+		dl.Sender <- wrapResult(nil, url, err)
+		return
+	}
+
+	dl.Sender <- wrapResult(doc, url, nil)
+}
+
+func wrapResult(doc *goquery.Document, url string, err error) func() (doc *goquery.Document, url string, err error) {
+	return func() (doc *goquery.Document, url string, err error) {
+		return doc, url, err
 	}
 }
 
-// Get get请求的简单封装
+// get  get请求的简单封装
 func get(url string) (resp *http.Response, err error) {
 	req, err := newRequest("GET", url)
 	if err != nil {
@@ -84,9 +117,4 @@ func newRequest(method, url string) (*http.Request, error) {
 func randomUserAgent() string {
 	idx := rand.Intn(len(userAgentList))
 	return userAgentList[idx]
-}
-
-// download 开启请求指定url的数据
-func download(url string) (res *http.Response, err error) {
-	return get(url)
 }
