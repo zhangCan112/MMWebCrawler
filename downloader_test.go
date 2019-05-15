@@ -75,7 +75,7 @@ func Test_Downloader_DownloadSuccess(t *testing.T) {
 	}))
 	defer ts.Close()
 
-	docReceiver := RunDownloader()
+	docReceiver := DownloadReceiver()
 	var api = ts.URL
 	Download(api)
 
@@ -99,7 +99,7 @@ func Test_Downloader_DownloadFailed(t *testing.T) {
 	}))
 	defer ts.Close()
 
-	docReceiver := RunDownloader()
+	docReceiver := DownloadReceiver()
 	var api = ts.URL
 	//URL错误测试
 	Download(api + "failed")

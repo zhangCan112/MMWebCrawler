@@ -34,12 +34,12 @@ var (
 
 // Downloader 下载器
 type Downloader struct {
-	Sender chan func() (doc *goquery.Document, url string, err error)
+	ResponseChan chan func() (doc *goquery.Document, url string, err error)
 }
 
-// RunDownloader 启动默认的Downloader模块
-func RunDownloader() <-chan func() (doc *goquery.Document, url string, err error) {
-	return defaultDownloader.Run()
+// DownloadReceiver 获取一个下载返回接收通道，该通道会返回爬取结果
+func DownloadReceiver() <-chan func() (doc *goquery.Document, url string, err error) {
+	return defaultDownloader.Receiver()
 }
 
 // Download 使用默认下载器请求指定url上的数据
@@ -50,13 +50,13 @@ func Download(url string) {
 // NewDownloader 返回一个新的Downloader实例
 func NewDownloader() *Downloader {
 	return &Downloader{
-		Sender: make(chan func() (doc *goquery.Document, url string, err error), 5),
+		ResponseChan: make(chan func() (doc *goquery.Document, url string, err error), 5),
 	}
 }
 
-// Run 下载器开启工作模式,并返回一个闭包函数类型的通道用来外部接收完成下载的数据
-func (dl *Downloader) Run() <-chan func() (doc *goquery.Document, url string, err error) {
-	return dl.Sender
+// Receiver 获取一个下载返回的接收器,返回一个闭包函数类型的通道用来外部接收完成下载的数据
+func (dl *Downloader) Receiver() <-chan func() (doc *goquery.Document, url string, err error) {
+	return dl.ResponseChan
 }
 
 // Download 对制定url发起请求
@@ -68,20 +68,20 @@ func (dl *Downloader) Download(url string) {
 func (dl *Downloader) download(url string) {
 	res, err := get(url)
 	if err != nil {
-		dl.Sender <- wrapResult(nil, url, err)
+		dl.ResponseChan <- wrapResult(nil, url, err)
 		return
 	}
 	defer res.Body.Close()
 
 	if res.StatusCode != 200 {
-		dl.Sender <- wrapResult(nil, url, fmt.Errorf("status code error: %d %s", res.StatusCode, res.Status))
+		dl.ResponseChan <- wrapResult(nil, url, fmt.Errorf("status code error: %d %s", res.StatusCode, res.Status))
 		return
 	}
 
 	// Load the HTML document
 	doc, _ := goquery.NewDocumentFromReader(res.Body)
 
-	dl.Sender <- wrapResult(doc, url, nil)
+	dl.ResponseChan <- wrapResult(doc, url, nil)
 }
 
 func wrapResult(doc *goquery.Document, url string, err error) func() (doc *goquery.Document, url string, err error) {

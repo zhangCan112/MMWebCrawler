@@ -14,7 +14,7 @@ func main() {
 }
 
 func test() {
-	docReceiver := webcrawler.RunDownloader()
+	docReceiver := webcrawler.DownloadReceiver()
 	webcrawler.Download("http://www.baidu.com")
 	resultFunc := <-docReceiver
 	doc, url, err := resultFunc()
