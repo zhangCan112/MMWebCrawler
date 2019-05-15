@@ -61,7 +61,7 @@ func Test_Downloader_get_Failed(t *testing.T) {
 	}))
 	defer ts.Close()
 
-	res, err := get("aasdadasdasdass")
+	res, err := get("%%%\aasdadasdasdass")
 
 	refute(t, reflect.ValueOf(err).IsNil(), true)
 	expect(t, reflect.ValueOf(res).IsNil(), true)
@@ -101,10 +101,19 @@ func Test_Downloader_DownloadFailed(t *testing.T) {
 
 	docReceiver := RunDownloader()
 	var api = ts.URL
+	//URL错误测试
 	Download(api + "failed")
 
 	resultFunc := <-docReceiver
 	doc, _, err := resultFunc()
+
+	expect(t, reflect.ValueOf(err).IsNil(), false)
+	expect(t, reflect.ValueOf(doc).IsNil(), true)
+
+	//URL正确但返回状态码错误
+	Download(api)
+	resultFunc = <-docReceiver
+	doc, _, err = resultFunc()
 
 	expect(t, reflect.ValueOf(err).IsNil(), false)
 	expect(t, reflect.ValueOf(doc).IsNil(), true)

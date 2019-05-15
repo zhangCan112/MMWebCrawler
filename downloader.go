@@ -79,11 +79,7 @@ func (dl *Downloader) download(url string) {
 	}
 
 	// Load the HTML document
-	doc, err := goquery.NewDocumentFromReader(res.Body)
-	if err != nil {
-		dl.Sender <- wrapResult(nil, url, err)
-		return
-	}
+	doc, _ := goquery.NewDocumentFromReader(res.Body)
 
 	dl.Sender <- wrapResult(doc, url, nil)
 }
