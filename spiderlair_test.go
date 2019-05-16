@@ -20,3 +20,21 @@ func Test_muxEntrySlice_sortable(t *testing.T) {
 	expect(t, slice[0], val1)
 	expect(t, slice[1], val2)
 }
+
+func Test_Spiderlair(t *testing.T) {
+	var spl = NewSpiderlair()
+
+	val1 := muxEntry{
+		pattern: "http://www.baidu.com",
+	}
+	val2 := muxEntry{
+		pattern: "123",
+	}
+
+	val3 := muxEntry{
+		pattern: "1",
+	}
+	val4 := muxEntry{
+		pattern: "123",
+	}
+}
