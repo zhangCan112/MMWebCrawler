@@ -2,6 +2,7 @@ package webcrawler
 
 import (
 	"sort"
+	"strings"
 	"sync"
 
 	"github.com/PuerkitoBio/goquery"
@@ -83,21 +84,45 @@ func (sl *Spiderlair) Join(pattern string, sp Spider) {
 		pattern: pattern,
 	}
 
+	if sl.m == nil {
+		sl.m = map[string]muxEntry{}
+	}
+
 	sl.m[pattern] = me
-	sl.rankingInsert(me)
+	//first clean last append
+	sl.cleanEs(pattern)
+	sl.appendSorted(me)
 }
 
 // Spider 根据指定path查找合适的Spider
-func (sl *Spiderlair) Spider(path string) Spider {
+func (sl *Spiderlair) Spider(url string) Spider {
 	sl.mux.RLock()
 	defer sl.mux.RUnlock()
 
-	s, _ := sl.match(path)
+	s, _ := sl.match(url)
 	return s
 }
 
-// rankingInsert 排序插入muxEntry，依照pattern长度从小到大
-func (sl *Spiderlair) rankingInsert(me muxEntry) {
+// Clean 根据指定pattern清除Spider
+func (sl *Spiderlair) Clean(pattern string) {
+	sl.mux.Lock()
+	defer sl.mux.Unlock()
+
+	delete(sl.m, pattern)
+	sl.cleanEs(pattern)
+}
+
+// CleanAll 清理所有的spider
+func (sl *Spiderlair) CleanAll() {
+	sl.mux.Lock()
+	defer sl.mux.Unlock()
+
+	sl.m = map[string]muxEntry{}
+	sl.es = nil
+}
+
+// appendSorted 排序插入muxEntry，依照pattern长度从小到大
+func (sl *Spiderlair) appendSorted(me muxEntry) {
 	if sl.es == nil {
 		sl.es = make([]muxEntry, 100)[0:0]
 		sl.es = append(sl.es, me)
@@ -106,8 +131,31 @@ func (sl *Spiderlair) rankingInsert(me muxEntry) {
 	}
 }
 
+// cleanEs 清除es中指定pattern的值
+func (sl *Spiderlair) cleanEs(pattern string) {
+	for idx, val := range sl.es {
+		if val.pattern == pattern {
+			sl.es = append(sl.es[:idx], sl.es[idx+1:]...)
+			break
+		}
+	}
+}
+
 // match 在给定路径字符串的Spider映射上查找处理Spider
 // 最具体（最长）匹配优先
-func (sl *Spiderlair) match(path string) (s Spider, pattern string) {
+func (sl *Spiderlair) match(url string) (s Spider, pattern string) {
+	// Check for exact match first.
+	v, ok := sl.m[url]
+	if ok {
+		return v.s, v.pattern
+	}
+
+	// Check for longest valid match.  mux.es contains all patterns
+	// that end in / sorted from longest to shortest.
+	for _, e := range sl.es {
+		if strings.HasPrefix(url, e.pattern) {
+			return e.s, e.pattern
+		}
+	}
 	return nil, ""
 }
