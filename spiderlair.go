@@ -85,7 +85,7 @@ func (sl *Spiderlair) Join(pattern string, sp Spider) {
 	}
 
 	if sl.m == nil {
-		sl.m = map[string]muxEntry{}
+		sl.m = make(map[string]muxEntry)
 	}
 
 	sl.m[pattern] = me
@@ -125,10 +125,9 @@ func (sl *Spiderlair) CleanAll() {
 func (sl *Spiderlair) appendSorted(me muxEntry) {
 	if sl.es == nil {
 		sl.es = make([]muxEntry, 100)[0:0]
-		sl.es = append(sl.es, me)
-	} else {
-		sort.Sort(muxEntrySlice(sl.es))
 	}
+	sl.es = append(sl.es, me)
+	sort.Sort(muxEntrySlice(sl.es))
 }
 
 // cleanEs 清除es中指定pattern的值
