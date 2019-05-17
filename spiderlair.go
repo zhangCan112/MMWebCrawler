@@ -121,6 +121,14 @@ func (sl *Spiderlair) CleanAll() {
 	sl.es = nil
 }
 
+// extractHTML Spider接口的实现
+func (sl *Spiderlair) extractHTML(rw *ResultWriter, doc *goquery.Document) {
+	sp := sl.Spider(doc.Url.String())
+	if sp != nil {
+		sp.extractHTML(rw, doc)
+	}
+}
+
 // appendSorted 排序插入muxEntry，依照pattern长度从小到大
 func (sl *Spiderlair) appendSorted(me muxEntry) {
 	if sl.es == nil {
