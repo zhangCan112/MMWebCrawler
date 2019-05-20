@@ -28,20 +28,20 @@ func Test_Spiderlair(t *testing.T) {
 
 	val1 := muxEntry{
 		pattern: "http://ps4.tgbus.com",
-		s:       SpiderFunc(func(rw *ResultWriter, doc *goquery.Document) {}),
+		s:       SpiderFunc(func(rw ResultWriter, doc *goquery.Document) {}),
 	}
 	val2 := muxEntry{
 		pattern: "http://switch.tgbus.com",
-		s:       SpiderFunc(func(rw *ResultWriter, doc *goquery.Document) {}),
+		s:       SpiderFunc(func(rw ResultWriter, doc *goquery.Document) {}),
 	}
 
 	val3 := muxEntry{
 		pattern: "http://XBoxOne.tgbus.com",
-		s:       SpiderFunc(func(rw *ResultWriter, doc *goquery.Document) {}),
+		s:       SpiderFunc(func(rw ResultWriter, doc *goquery.Document) {}),
 	}
 	val4 := muxEntry{
 		pattern: "http://XBoxX360.tgbus.com",
-		s:       SpiderFunc(func(rw *ResultWriter, doc *goquery.Document) {}),
+		s:       SpiderFunc(func(rw ResultWriter, doc *goquery.Document) {}),
 	}
 
 	//乱序加入
