@@ -85,6 +85,33 @@ type SpiderServer interface {
 	URLsChan() <-chan []string
 }
 
+var defaultSS = NewSpiderServer()
+
+// Do 执行spider解析
+func Do(url string, doc *goquery.Document) {
+	defaultSS.Do(url, doc)
+}
+
+// Handle 注册一个Spider
+func Handle(pattern string, sp Spider) {
+	defaultSS.Handle(pattern, sp)
+}
+
+// HandleFunc 注册一个Spider函数
+func HandleFunc(pattern string, spfunc func(rw ResultWriter, doc *goquery.Document)) {
+	defaultSS.HandleFunc(pattern, spfunc)
+}
+
+// ItemsChan 返回items接收通道
+func ItemsChan() <-chan []interface{} {
+	return defaultSS.ItemsChan()
+}
+
+// URLsChan 返回urls接收通道
+func URLsChan() <-chan []string {
+	return defaultSS.URLsChan()
+}
+
 // NewSpiderServer 创建一个默认的SpiderServer实例
 func NewSpiderServer() SpiderServer {
 	return &defaultSpiderServer{
@@ -100,6 +127,7 @@ type defaultSpiderServer struct {
 	urlsChan  chan []string
 }
 
+// Do 执行spider解析
 func (ss *defaultSpiderServer) Do(url string, doc *goquery.Document) {
 	go ss.do(url, doc)
 }
