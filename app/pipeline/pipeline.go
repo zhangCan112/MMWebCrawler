@@ -33,6 +33,14 @@ type Collector struct {
 	cache     []Item
 }
 
+// NewCollector 将一个Pipeline包装为Collector
+func NewCollector(p Pipeline, cacheSize int) *Collector {
+	return &Collector{
+		Pipeline: p,
+		cacheSize: cacheSize,
+	}
+}
+
 // Put Pipeline
 func (c *Collector) Put(first Item, rest ...Item) error {
 	if c.cache == nil {
@@ -49,3 +57,27 @@ func (c *Collector) Put(first Item, rest ...Item) error {
 	}
 	return nil
 }
+
+// Chain Pipeline接口的扩展实现，实现了将Pipeline进行链式聚合的功能
+type Chain struct {
+	Pipeline
+}
+
+// NewChain 将一个Pipeline包装为Chain
+func NewChain(p Pipeline) *Chain {
+	return &Chain{}
+}
+
+// Handle  将一个Pipeline将入Chain中
+func (c *Chain) Handle(p Pipeline) {
+
+}
+
+// Put Pipeline
+func (c *Chain) Put(first Item, rest ...Item) error {
+	return nil
+}
+
+// Mux Pipeline接口的扩展实现，实现了将Pipeline进行映射聚合的功能
+type Mux struct {}
+
