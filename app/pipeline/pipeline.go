@@ -8,7 +8,7 @@ type Item interface {
 	SortedKeys() []string
 	// KeyValues 获取数据键值对
 	KeyValues() map[string]interface{}
-	// 指定输出的类型，可以指定多个类型
+	// OutputTypes 指定输出的类型，可以指定多个类型
 	OutputTypes() []string
 }
 
