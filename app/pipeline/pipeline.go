@@ -1,4 +1,4 @@
-package webcrawler
+package pipeline
 
 // Item 保存数据的一个最小单元
 type Item interface {
@@ -16,6 +16,14 @@ type Item interface {
 type Pipeline interface {
 	// Put 将数据放入输出管道
 	Put(first Item, rest ...Item) error
+}
+
+// HandlerFunc 就是一个允许普通函数做为Pipeline的适配器，
+type HandlerFunc func(first Item, rest ...Item) error
+
+//Put Pipeline
+func (p HandlerFunc) Put(first Item, rest ...Item) error {
+	return p(first, rest...)
 }
 
 // Collector Pipeline接口的扩展实现，实现了缓存数据并批量保存数据的功能

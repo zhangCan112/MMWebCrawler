@@ -2,7 +2,7 @@
 scheduler 是一个FIFO队列，实现了广度优先安排待处理的请求
 */
 
-package webcrawler
+package scheduler
 
 import (
 	"sync"

@@ -1,4 +1,4 @@
-package webcrawler
+package downloader
 
 import (
 	"fmt"
