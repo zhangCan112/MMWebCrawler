@@ -63,13 +63,6 @@ func (dl *Downloader) Download(url string) (doc *goquery.Document, err error) {
 	return doc, nil
 }
 
-func wrapResult(doc *goquery.Document, url string, err error) func() (doc *goquery.Document, url string, err error) {
-	d, u, e := doc, url, err
-	return func() (doc *goquery.Document, url string, err error) {
-		return d, u, e
-	}
-}
-
 // get  get请求的简单封装
 func get(url string) (resp *http.Response, err error) {
 	req, err := newRequest("GET", url)
