@@ -10,18 +10,7 @@ import (
 )
 
 func main() {
-	test()
-}
-
-func test() {
-	docReceiver := webcrawler.DownloadReceiver()
-	webcrawler.Download("http://www.baidu.com")
-	resultFunc := <-docReceiver
-	doc, url, err := resultFunc()
-	fmt.Println(doc)
-	fmt.Println(url)
-	fmt.Println(err)
-	fmt.Println(doc.Text())
+	ExampleScrape()
 }
 
 func ExampleScrape() {

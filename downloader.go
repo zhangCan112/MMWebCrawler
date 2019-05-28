@@ -33,55 +33,34 @@ var (
 )
 
 // Downloader 下载器
-type Downloader struct {
-	ResponseChan chan func() (doc *goquery.Document, url string, err error)
-}
-
-// DownloadReceiver 获取一个下载返回接收通道，该通道会返回爬取结果
-func DownloadReceiver() <-chan func() (doc *goquery.Document, url string, err error) {
-	return defaultDownloader.Receiver()
-}
+type Downloader struct{}
 
 // Download 使用默认下载器请求指定url上的数据
-func Download(url string) {
-	defaultDownloader.Download(url)
+func Download(url string) (doc *goquery.Document, err error) {
+	return defaultDownloader.Download(url)
 }
 
 // NewDownloader 返回一个新的Downloader实例
 func NewDownloader() *Downloader {
-	return &Downloader{
-		ResponseChan: make(chan func() (doc *goquery.Document, url string, err error), 5),
-	}
+	return &Downloader{}
 }
 
-// Receiver 获取一个下载返回的接收器,返回一个闭包函数类型的通道用来外部接收完成下载的数据
-func (dl *Downloader) Receiver() <-chan func() (doc *goquery.Document, url string, err error) {
-	return dl.ResponseChan
-}
-
-// Download 对制定url发起请求
-func (dl *Downloader) Download(url string) {
-	go dl.download(url)
-}
-
-// get 对制定url发起请求
-func (dl *Downloader) download(url string) {
+// Download 对指定url发起请求
+func (dl *Downloader) Download(url string) (doc *goquery.Document, err error) {
 	res, err := get(url)
 	if err != nil {
-		dl.ResponseChan <- wrapResult(nil, url, err)
-		return
+		return nil, err
 	}
 	defer res.Body.Close()
 
 	if res.StatusCode != 200 {
-		dl.ResponseChan <- wrapResult(nil, url, fmt.Errorf("status code error: %d %s", res.StatusCode, res.Status))
-		return
+		return nil, fmt.Errorf("status code error: %d %s", res.StatusCode, res.Status)
 	}
 
 	// Load the HTML document
-	doc, _ := goquery.NewDocumentFromReader(res.Body)
+	doc, _ = goquery.NewDocumentFromReader(res.Body)
 
-	dl.ResponseChan <- wrapResult(doc, url, nil)
+	return doc, nil
 }
 
 func wrapResult(doc *goquery.Document, url string, err error) func() (doc *goquery.Document, url string, err error) {

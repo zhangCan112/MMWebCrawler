@@ -75,18 +75,13 @@ func Test_Downloader_DownloadSuccess(t *testing.T) {
 	}))
 	defer ts.Close()
 
-	docReceiver := DownloadReceiver()
 	var api = ts.URL
-	Download(api)
-
-	resultFunc := <-docReceiver
-	doc, url, err := resultFunc()
+	doc, err := Download(api)
 
 	if err != nil {
 		t.Errorf("error should be nil:%s", err)
 	}
 	refute(t, doc, nil)
-	expect(t, url, api)
 	h1Text := doc.Find("h1").Text()
 	expect(t, h1Text, "My First Heading")
 }
@@ -99,21 +94,16 @@ func Test_Downloader_DownloadFailed(t *testing.T) {
 	}))
 	defer ts.Close()
 
-	docReceiver := DownloadReceiver()
 	var api = ts.URL
 	//URL错误测试
-	Download(api + "failed")
 
-	resultFunc := <-docReceiver
-	doc, _, err := resultFunc()
+	doc, err := Download(api + "failed")
 
 	expect(t, reflect.ValueOf(err).IsNil(), false)
 	expect(t, reflect.ValueOf(doc).IsNil(), true)
 
 	//URL正确但返回状态码错误
-	Download(api)
-	resultFunc = <-docReceiver
-	doc, _, err = resultFunc()
+	doc, err = Download(api)
 
 	expect(t, reflect.ValueOf(err).IsNil(), false)
 	expect(t, reflect.ValueOf(doc).IsNil(), true)
