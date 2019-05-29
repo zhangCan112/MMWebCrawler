@@ -16,7 +16,7 @@ type Item interface {
 
 // Writer 写入器
 type Writer interface {
-	// Put 将数据放入输出管道
+	// Write 将数据放入输出管道
 	Write(first Item, rest ...Item) error
 }
 
@@ -41,6 +41,7 @@ func (p HandlerFunc) Write(first Item, rest ...Item) error {
 
 // Collector Pipeline接口的扩展实现，实现了数据单元的分类，缓存和批量保存数据的功能
 type Collector struct {
+	Writer
 	cacheSize int
 	classed   sync.Map
 }
@@ -52,8 +53,8 @@ func NewCollector(w Writer, cacheSize int) *Collector {
 	}
 }
 
-// Put Pipeline
-func (c *Collector) Put(first Item, rest ...Item) error {
+// Write Writer
+func (c *Collector) Write(first Item, rest ...Item) error {
 	total := make([]Item, len(rest)+1)[0:0]
 	total = append(total, first)
 	total = append(total, rest...)
@@ -63,7 +64,7 @@ func (c *Collector) Put(first Item, rest ...Item) error {
 	}
 
 	if len(c.cache) > c.cacheSize {
-		err := c.Pipeline.Put(c.cache[0], c.cache[1:]...)
+		err := c.Pipeline.Write(c.cache[0], c.cache[1:]...)
 		if err == nil {
 			c.cache = c.cache[0:0]
 		}
@@ -78,8 +79,8 @@ type Mux struct {
 	store sync.Map
 }
 
-// Put Pipeline
-func (m *Mux) Put(first Item, rest ...Item) error {
+// Write Writer
+func (m *Mux) Write(first Item, rest ...Item) error {
 	total := make([]Item, len(rest)+1)[0:0]
 	total = append(total, first)
 	total = append(total, rest...)
@@ -87,7 +88,7 @@ func (m *Mux) Put(first Item, rest ...Item) error {
 		for _, output := range it.OutputTypes() {
 			if val, ok := m.store.Load(output); ok {
 				p := val.(Pipeline)
-				p.Put(it)
+				p.Write(it)
 			}
 		}
 	}
