@@ -1,5 +1,7 @@
 package pipeline
 
+import "sync"
+
 // Item 保存数据的一个最小单元
 type Item interface {
 	// TableName 所属数据表
@@ -12,42 +14,54 @@ type Item interface {
 	OutputTypes() []string
 }
 
-// Pipeline 输出管道
-type Pipeline interface {
+// Writer 写入器
+type Writer interface {
 	// Put 将数据放入输出管道
-	Put(first Item, rest ...Item) error
+	Write(first Item, rest ...Item) error
 }
 
-// HandlerFunc 就是一个允许普通函数做为Pipeline的适配器，
+// Closer 关闭
+type Closer interface {
+	Close()
+}
+
+// Pipeline 输出管道
+type Pipeline interface {
+	Writer
+	Closer
+}
+
+// HandlerFunc 就是一个允许普通函数做为Writer的适配器，
 type HandlerFunc func(first Item, rest ...Item) error
 
-//Put Pipeline
-func (p HandlerFunc) Put(first Item, rest ...Item) error {
+//Write Writer
+func (p HandlerFunc) Write(first Item, rest ...Item) error {
 	return p(first, rest...)
 }
 
-// Collector Pipeline接口的扩展实现，实现了缓存数据并批量保存数据的功能
+// Collector Pipeline接口的扩展实现，实现了数据单元的分类，缓存和批量保存数据的功能
 type Collector struct {
-	Pipeline
 	cacheSize int
-	cache     []Item
+	classed   sync.Map
 }
 
 // NewCollector 将一个Pipeline包装为Collector
-func NewCollector(p Pipeline, cacheSize int) *Collector {
+func NewCollector(w Writer, cacheSize int) *Collector {
 	return &Collector{
-		Pipeline: p,
 		cacheSize: cacheSize,
 	}
 }
 
 // Put Pipeline
 func (c *Collector) Put(first Item, rest ...Item) error {
-	if c.cache == nil {
-		c.cache = make([]Item, c.cacheSize)[0:0]
+	total := make([]Item, len(rest)+1)[0:0]
+	total = append(total, first)
+	total = append(total, rest...)
+
+	for _, it := range total {
+		c.classed.Store(it.TableName(), it)
 	}
-	c.cache = append(c.cache, first)
-	c.cache = append(c.cache, rest...)
+
 	if len(c.cache) > c.cacheSize {
 		err := c.Pipeline.Put(c.cache[0], c.cache[1:]...)
 		if err == nil {
@@ -58,26 +72,29 @@ func (c *Collector) Put(first Item, rest ...Item) error {
 	return nil
 }
 
-// Chain Pipeline接口的扩展实现，实现了将Pipeline进行链式聚合的功能
-type Chain struct {
+// Mux Pipeline接口的扩展实现，实现了将Pipeline按照outputType进行映射聚合的功能
+type Mux struct {
 	Pipeline
-}
-
-// NewChain 将一个Pipeline包装为Chain
-func NewChain(p Pipeline) *Chain {
-	return &Chain{}
-}
-
-// Handle  将一个Pipeline将入Chain中
-func (c *Chain) Handle(p Pipeline) {
-
+	store sync.Map
 }
 
 // Put Pipeline
-func (c *Chain) Put(first Item, rest ...Item) error {
+func (m *Mux) Put(first Item, rest ...Item) error {
+	total := make([]Item, len(rest)+1)[0:0]
+	total = append(total, first)
+	total = append(total, rest...)
+	for _, it := range total {
+		for _, output := range it.OutputTypes() {
+			if val, ok := m.store.Load(output); ok {
+				p := val.(Pipeline)
+				p.Put(it)
+			}
+		}
+	}
 	return nil
 }
 
-// Mux Pipeline接口的扩展实现，实现了将Pipeline进行映射聚合的功能
-type Mux struct {}
-
+// Handle 注册一个pipeline到Mux
+func (m *Mux) Handle(outputType string, p Pipeline) {
+	m.store.Store(outputType, p)
+}
