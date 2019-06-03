@@ -43,34 +43,45 @@ func (p HandlerFunc) Write(first Item, rest ...Item) error {
 type Collector struct {
 	Writer
 	cacheSize int
-	classed   sync.Map
+	classed   map[string][]Item
 }
 
 // NewCollector 将一个Pipeline包装为Collector
 func NewCollector(w Writer, cacheSize int) *Collector {
 	return &Collector{
 		cacheSize: cacheSize,
+		classed:   make(map[string][]Item),
 	}
 }
 
-// Write Writer
+// Write Pipeline
 func (c *Collector) Write(first Item, rest ...Item) error {
 	total := make([]Item, len(rest)+1)[0:0]
 	total = append(total, first)
 	total = append(total, rest...)
 
 	for _, it := range total {
-		c.classed.Store(it.TableName(), it)
+		c.classed[it.TableName()] = append(c.classed[it.TableName()], it)
 	}
 
-	if len(c.cache) > c.cacheSize {
-		err := c.Pipeline.Write(c.cache[0], c.cache[1:]...)
-		if err == nil {
-			c.cache = c.cache[0:0]
+	for key, its := range c.classed {
+		if len(its) >= c.cacheSize {
+			c.Writer.Write(its[0], its[1:]...)
+			delete(c.classed, key)
 		}
-		return err
 	}
+
 	return nil
+}
+
+// Close Pipeline
+func (c *Collector) Close() {
+	for _, its := range c.classed {
+		if len(its) > 0 {
+			c.Writer.Write(its[0], its[1:]...)
+		}
+	}
+	c.classed = make(map[string][]Item)
 }
 
 // Mux Pipeline接口的扩展实现，实现了将Pipeline按照outputType进行映射聚合的功能
