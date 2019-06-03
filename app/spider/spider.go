@@ -6,36 +6,37 @@ import (
 	"sync"
 
 	"github.com/PuerkitoBio/goquery"
+	"github.com/zhangCan112/webcrawler/app/pipeline"
 )
 
 // ResultWriter 爬虫结果写入器接口
 type ResultWriter interface {
-	Items() []interface{}
+	Items() []pipeline.Item
 	URLs() []string
-	AddItem(item interface{})
+	AddItem(item pipeline.Item)
 	AddURL(url string)
 }
 
 // NewResultWriter 返回一个ResultWriter的默认实现实例
 func NewResultWriter() ResultWriter {
 	return &defaultResultWriter{
-		items: make([]interface{}, 0),
+		items: make([]pipeline.Item, 0),
 		urls:  make([]string, 0),
 	}
 }
 
 type defaultResultWriter struct {
 	itemsMu sync.RWMutex
-	items   []interface{}
+	items   []pipeline.Item
 	urlsMu  sync.RWMutex
 	urls    []string
 }
 
-func (rw *defaultResultWriter) Items() []interface{} {
+func (rw *defaultResultWriter) Items() []pipeline.Item {
 	rw.itemsMu.RLock()
 	defer rw.itemsMu.RUnlock()
 
-	cp := make([]interface{}, len(rw.items))
+	cp := make([]pipeline.Item, len(rw.items))
 	copy(cp, rw.items)
 	return cp
 }
@@ -49,7 +50,7 @@ func (rw *defaultResultWriter) URLs() []string {
 	return cp
 }
 
-func (rw *defaultResultWriter) AddItem(item interface{}) {
+func (rw *defaultResultWriter) AddItem(item pipeline.Item) {
 	rw.itemsMu.Lock()
 	defer rw.itemsMu.Unlock()
 
@@ -65,14 +66,14 @@ func (rw *defaultResultWriter) AddURL(url string) {
 
 // Spider 爬虫解析模块的接口
 type Spider interface {
-	extractHTML(rw ResultWriter, doc *goquery.Document)
+	ExtractHTML(rw ResultWriter, doc *goquery.Document)
 }
 
 // SpiderFunc 就是一个允许普通函数做为Spider的适配器，
 type SpiderFunc func(rw ResultWriter, doc *goquery.Document)
 
-// extractHTML Spider接口的实现
-func (sf SpiderFunc) extractHTML(rw ResultWriter, doc *goquery.Document) {
+// ExtractHTML Spider接口的实现
+func (sf SpiderFunc) ExtractHTML(rw ResultWriter, doc *goquery.Document) {
 	sf(rw, doc)
 }
 
@@ -168,11 +169,11 @@ func (sl *Spiderlair) CleanAll() {
 	sl.es = nil
 }
 
-// extractHTML Spider接口的实现
-func (sl *Spiderlair) extractHTML(rw ResultWriter, doc *goquery.Document) {
+// ExtractHTML Spider接口的实现
+func (sl *Spiderlair) ExtractHTML(rw ResultWriter, doc *goquery.Document) {
 	sp := sl.Spider(doc.Url.String())
 	if sp != nil {
-		sp.extractHTML(rw, doc)
+		sp.ExtractHTML(rw, doc)
 	}
 }
 
