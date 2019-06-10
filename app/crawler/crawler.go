@@ -11,7 +11,7 @@ import (
 type (
 	Crawler interface {
 		// Init 初始化采集器
-		Init(spider spider.Spider)Crawler
+		Init(spider spider.Spider, maxProcesses int)Crawler
 		// Start 用种子URL启动采集器，至少一个
 		Start(seed string, rest ...string)
 		// Stop 停止采集器
@@ -25,11 +25,16 @@ type (
 		dl *downloader.Downloader
 		sc *scheduler.Scheduler
 		pl pipeline.Pipeline
+		maxProcesses int
 	}
 )
 
-func (c *crawler) Init(spider spider.Spider) Crawler {
+func (c *crawler) Init(spider spider.Spider, maxProcesses int) Crawler {
 	c.sp = spider
+	c.maxProcesses = 3
+	if maxProcesses > 0 {
+		c.maxProcesses = maxProcesses
+	}
 	return c
 }
 
@@ -62,10 +67,10 @@ func (c *crawler) work()  {
 }
 
 func (c *crawler) Stop() {
-	
+	c.pl.Close()
 }
 
 func (c *crawler) HasEnd() bool {
-	return false
+	return c.sc.UnhanldedCount() == 0
 }
 

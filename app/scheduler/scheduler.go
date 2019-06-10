@@ -5,7 +5,7 @@ scheduler 是一个FIFO队列，实现了广度优先安排待处理的请求
 package scheduler
 
 import (
-	"sync"
+	"sync"	
 )
 
 // DefaultScheduler 默认的全局调度器
@@ -68,6 +68,15 @@ func (s *Scheduler) Done(url string) {
 		s.history = append(s.history, url)
 	}
 }
+
+// Done 用来标记一个已完成的Request
+// 这样这个请求再被push时将被忽略
+func (s *Scheduler) UnhanldedCount() int {
+	s.storeMux.Lock()
+	defer s.storeMux.Unlock()
+	return len(s.store)
+}
+
 
 // HasDone url是否已经抓取过
 func (s *Scheduler) HasDone(url string) bool {
