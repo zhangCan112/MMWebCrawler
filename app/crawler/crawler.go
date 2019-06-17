@@ -2,16 +2,18 @@ package crawler
 
 import (
 	"fmt"
+
+	"github.com/zhangCan112/webcrawler/app/downloader"
 	"github.com/zhangCan112/webcrawler/app/pipeline"
 	"github.com/zhangCan112/webcrawler/app/scheduler"
-	"github.com/zhangCan112/webcrawler/app/downloader"
 	"github.com/zhangCan112/webcrawler/app/spider"
 )
 
 type (
+	// Crawler 抓取器的接口定义
 	Crawler interface {
 		// Init 初始化采集器
-		Init(spider spider.Spider, maxProcesses int)Crawler
+		Init(spider spider.Spider, maxProcesses int) Crawler
 		// Start 用种子URL启动采集器，至少一个
 		Start(seed string, rest ...string)
 		// Stop 停止采集器
@@ -20,12 +22,14 @@ type (
 		HasEnd() bool
 	}
 
+	// crawler 抓取器接口的默认实现
 	crawler struct {
-		sp spider.Spider
-		dl *downloader.Downloader
-		sc *scheduler.Scheduler
-		pl pipeline.Pipeline
+		sp           spider.Spider
+		dl           *downloader.Downloader
+		sc           *scheduler.Scheduler
+		pl           pipeline.Pipeline
 		maxProcesses int
+		ch           chan struct{}
 	}
 )
 
@@ -41,13 +45,29 @@ func (c *crawler) Init(spider spider.Spider, maxProcesses int) Crawler {
 func (c *crawler) Start(seed string, rest ...string) {
 	c.sc.Push(seed)
 	for _, surl := range rest {
-		c.sc.Push(surl)		
+		c.sc.Push(surl)
 	}
+
+	if c.ch != nil {
+		return
+	}
+	c.ch = make(chan struct{}, c.maxProcesses)
+	for c.ch != nil {
+		c.ch <- struct{}{}
+		go c.work()
+	}
+
 }
 
-func (c *crawler) work()  {
+func (c *crawler) work() {
+	defer func() {
+		<-c.ch
+	}()
+
 	url, ok := c.sc.Pop()
-	if !ok {return}	
+	if !ok {
+		return
+	}
 	doc, err := c.dl.Download(url)
 	if err != nil {
 		fmt.Println(err)
@@ -59,18 +79,20 @@ func (c *crawler) work()  {
 
 	urls := rw.URLs()
 	for _, surl := range urls {
-		c.sc.Push(surl)		
-	}	
+		c.sc.Push(surl)
+	}
 
 	its := rw.Items()
 	c.pl.Write(its[0], its[1:]...)
 }
 
 func (c *crawler) Stop() {
+	ch := c.ch
+	c.ch = nil
+	close(ch)
 	c.pl.Close()
 }
 
 func (c *crawler) HasEnd() bool {
 	return c.sc.UnhanldedCount() == 0
 }
-

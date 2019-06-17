@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/PuerkitoBio/goquery"
+	"github.com/zhangCan112/webcrawler/app/pipeline"
 )
 
 /* 测试辅助函数 */
@@ -37,12 +38,28 @@ func Test_muxEntrySlice_sortable(t *testing.T) {
 	expect(t, slice[1], val2)
 }
 
+func Test_NewResultWriter(t *testing.T) {
+	var spider = SpiderFunc(func(rw ResultWriter, doc *goquery.Document) {
+		expect(t, len(rw.Items()), 0)
+		expect(t, len(rw.URLs()), 0)
+		rw.AddURL("https://www.baidu.com")
+		expect(t, len(rw.URLs()), 1)
+		rw.AddItem(pipeline.NewItem("test", nil, nil, nil))
+		expect(t, len(rw.Items()), 1)
+	})
+	var rw = NewResultWriter()
+	doc, _ := goquery.NewDocument("http://ps4.tgbus.com")
+	spider.ExtractHTML(rw, doc)
+}
+
 func Test_Spiderlair(t *testing.T) {
 	var spl = NewSpiderlair()
 
 	val1 := muxEntry{
 		pattern: "http://ps4.tgbus.com",
-		s:       SpiderFunc(func(rw ResultWriter, doc *goquery.Document) {}),
+		s: SpiderFunc(func(rw ResultWriter, doc *goquery.Document) {
+			rw.AddURL("Http://zc.hahaha.com")
+		}),
 	}
 	val2 := muxEntry{
 		pattern: "http://switch.tgbus.com",
@@ -85,8 +102,15 @@ func Test_Spiderlair(t *testing.T) {
 	expect(t, spl.Spider("http://switch.tgbus.com"), nil)
 	expect(t, len(spl.es), 3)
 
+	//执行操作
+	doc, _ := goquery.NewDocument("http://ps4.tgbus.com")
+	rw := NewResultWriter()
+	spl.ExtractHTML(rw, doc)
+	expect(t, len(rw.URLs()), 1)
+
 	//清除操作测试
 	spl.CleanAll()
 	expect(t, len(spl.m), 0)
 	expect(t, len(spl.es), 0)
+
 }

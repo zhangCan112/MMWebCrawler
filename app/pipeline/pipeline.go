@@ -14,6 +14,43 @@ type Item interface {
 	OutputTypes() []string
 }
 
+// NewItem 新建一个Item接口的默认实例
+func NewItem(tableName string, sortedKeys []string, keyValues map[string]interface{}, outputTypes []string) Item {
+	return &item{
+		tableName:   tableName,
+		sortedKeys:  sortedKeys,
+		keyValues:   keyValues,
+		outputTypes: outputTypes,
+	}
+}
+
+type item struct {
+	tableName   string
+	sortedKeys  []string
+	keyValues   map[string]interface{}
+	outputTypes []string
+}
+
+func (it *item) TableName() string {
+	return it.tableName
+}
+
+func (it *item) SortedKeys() []string {
+	return it.sortedKeys[0:]
+}
+
+func (it *item) KeyValues() map[string]interface{} {
+	var kvs = make(map[string]interface{})
+	for key, val := range it.keyValues {
+		kvs[key] = val
+	}
+	return kvs
+}
+
+func (it *item) OutputTypes() []string {
+	return it.outputTypes[0:]
+}
+
 // Writer 写入器
 type Writer interface {
 	// Write 将数据放入输出管道

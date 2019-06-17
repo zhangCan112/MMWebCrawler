@@ -69,3 +69,15 @@ func TestSchedulerHasDone(t *testing.T) {
 
 	expect(t, DefaultScheduler.HasDone(url), true)
 }
+
+func TestSchedulerUnhanldedCount(t *testing.T) {
+
+	url := "http://www.hao123.com"
+	DefaultScheduler.Push(url)
+
+	expect(t, DefaultScheduler.UnhanldedCount(), 1)
+
+	//再次done 将被忽略
+	DefaultScheduler.Pop()
+	expect(t, DefaultScheduler.UnhanldedCount(), 0)
+}
