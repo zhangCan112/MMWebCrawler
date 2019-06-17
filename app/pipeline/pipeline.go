@@ -76,6 +76,10 @@ func (p HandlerFunc) Write(first Item, rest ...Item) error {
 	return p(first, rest...)
 }
 
+//Close Closer
+func (p HandlerFunc) Close() {
+}
+
 // Collector Pipeline接口的扩展实现，实现了数据单元的分类，缓存和批量保存数据的功能
 type Collector struct {
 	Writer
