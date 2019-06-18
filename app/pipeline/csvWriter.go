@@ -3,7 +3,7 @@ package pipeline
 import (
 	"fmt"
 )
-var csvWriter = HandlerFunc(func(first Item, rest ...Item) error {
+var CSVWriter = HandlerFunc(func(first Item, rest ...Item) error {
 	total := make([]Item, len(rest)+1)[0:0]
 	total = append(total, first)
 	total = append(total, rest...)

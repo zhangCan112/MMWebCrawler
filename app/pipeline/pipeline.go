@@ -68,7 +68,7 @@ type Pipeline interface {
 	Closer
 }
 
-// HandlerFunc 就是一个允许普通函数做为Writer的适配器，
+// HandlerFunc 就是一个允许普通函数做为Pipeline的适配器，
 type HandlerFunc func(first Item, rest ...Item) error
 
 //Write Writer

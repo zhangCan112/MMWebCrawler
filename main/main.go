@@ -1,16 +1,23 @@
 package main
 
 import (
+	"github.com/zhangCan112/webcrawler/app/crawler"
+	"github.com/zhangCan112/webcrawler/app/pipeline"
 	"fmt"
 	"log"
 	"net/http"
-	"github.com/zhangCan112/webcrawler/app"
-
+	"github.com/zhangCan112/webcrawler/app"		
 	"github.com/PuerkitoBio/goquery"
 )
 
 func main() {
-	ExampleScrape()
+	dpDemo()
+}
+
+func dpDemo() {
+	cr := crawler.NewCrawler()
+	cr.Init(DBSpider, pipeline.CSVWriter, 3)
+	cr.Start("http://t.dianping.com/list/xian?q=%E4%B8%93%E4%B8%9A%E8%84%B1%E6%AF%9B")
 }
 
 func ExampleScrape() {
@@ -37,14 +44,7 @@ func ExampleScrape() {
 		// saleCount, _ := s.Attr("data-static-join")
 
 		fmt.Printf("%s %s 价格：%s \n", title, subTitle, price)
-	})
-	// Find the review items
-	// doc.Find(".sidebar-reviews article .content-block").Each(func(i int, s *goquery.Selection) {
-	// 	// For each item found, get the band and title
-	// 	band := s.Find("a").Text()
-	// 	title := s.Find("i").Text()
-	// 	fmt.Printf("Review %d: %s - %s\n", i, band, title)
-	// })
+	})	
 }
 
 // Get get请求的简单封装
