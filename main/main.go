@@ -1,13 +1,14 @@
 package main
 
 import (
-	"github.com/zhangCan112/webcrawler/app/crawler"
-	"github.com/zhangCan112/webcrawler/app/pipeline"
 	"fmt"
 	"log"
 	"net/http"
-	"github.com/zhangCan112/webcrawler/app"		
+
 	"github.com/PuerkitoBio/goquery"
+	webcrawler "github.com/zhangCan112/webcrawler/app"
+	"github.com/zhangCan112/webcrawler/app/crawler"
+	"github.com/zhangCan112/webcrawler/app/pipeline"
 )
 
 func main() {
@@ -44,7 +45,7 @@ func ExampleScrape() {
 		// saleCount, _ := s.Attr("data-static-join")
 
 		fmt.Printf("%s %s 价格：%s \n", title, subTitle, price)
-	})	
+	})
 }
 
 // Get get请求的简单封装
