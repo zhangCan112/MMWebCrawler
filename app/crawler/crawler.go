@@ -33,6 +33,7 @@ type (
 	}
 )
 
+// NewCrawler 新建一个Crawler实例
 func NewCrawler() Crawler {
 	return &crawler{}
 }
@@ -40,6 +41,7 @@ func NewCrawler() Crawler {
 func (c *crawler) Init(spider spider.Spider, pipeline pipeline.Pipeline, maxProcesses int) Crawler {
 	c.sp = spider
 	c.pl = pipeline
+	c.sc = scheduler.NewScheduler()
 	c.maxProcesses = 3
 	if maxProcesses > 0 {
 		c.maxProcesses = maxProcesses
@@ -61,7 +63,8 @@ func (c *crawler) Start(seed string, rest ...string) {
 		c.ch <- struct{}{}
 		go c.work()
 	}
-	for{}
+	for {
+	}
 }
 
 func (c *crawler) work() {
