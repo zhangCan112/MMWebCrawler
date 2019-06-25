@@ -46,12 +46,35 @@ var detailSpider = spider.SpiderFunc(func(rw spider.ResultWriter, doc *goquery.D
 	store := webcrawler.WrapedString(doc.Find("#J_boxDetail .shop-info .shop-name .shop-title").Text()).TrimSpace().FilterLineBreaks().Unwrap()
 	address, _ := doc.Find("#J_boxDetail .shop-info .shop-addr span[title]").Attr("title")
 	price := webcrawler.WrapedString(doc.Find("#J_boxDetail div div[class=comment-rst] div span strong").Text()).TrimSpace().FilterLineBreaks().TrimPrefix("￥").Unwrap()
-	commentTotal := webcrawler.WrapedString(doc.Find("#J_boxReview div.comment-mode.shop-comment div.J_wrapFilter div.comment-star dl dd:nth-child(1) em").Text()).TrimSpace().FilterLineBreaks().Unwrap()
-
+	commentTotal := webcrawler.WrapedString(doc.Find("#J_boxReview div.comment-mode.shop-comment div.J_wrapFilter div.comment-star dl dd:nth-child(1) em").Text()).TrimSpace().FilterLineBreaks().TrimPrefix("(").TrimSuffix(")").Unwrap()
+	comment5Star := webcrawler.WrapedString(doc.Find("#J_boxReview div.comment-mode.shop-comment div.J_wrapFilter div.comment-star dl dd:nth-child(2) em").Text()).TrimSpace().FilterLineBreaks().TrimPrefix("(").TrimSuffix(")").Unwrap()
+	comment4Star := webcrawler.WrapedString(doc.Find("#J_boxReview div.comment-mode.shop-comment div.J_wrapFilter div.comment-star dl dd:nth-child(3) em").Text()).TrimSpace().FilterLineBreaks().TrimPrefix("(").TrimSuffix(")").Unwrap()
+	comment3Star := webcrawler.WrapedString(doc.Find("#J_boxReview div.comment-mode.shop-comment div.J_wrapFilter div.comment-star dl dd:nth-child(4) em").Text()).TrimSpace().FilterLineBreaks().TrimPrefix("(").TrimSuffix(")").Unwrap()
+	comment2Star := webcrawler.WrapedString(doc.Find("#J_boxReview div.comment-mode.shop-comment div.J_wrapFilter div.comment-star dl dd:nth-child(5) em").Text()).TrimSpace().FilterLineBreaks().TrimPrefix("(").TrimSuffix(")").Unwrap()
+	comment1Star := webcrawler.WrapedString(doc.Find("#J_boxReview div.comment-mode.shop-comment div.J_wrapFilter div.comment-star dl dd:nth-child(6) em").Text()).TrimSpace().FilterLineBreaks().TrimPrefix("(").TrimSuffix(")").Unwrap()
 	it := pipeline.NewItem(
 		"月子中心",
-		[]string{"store", "address", "price", "comment_total"},
-		map[string]interface{}{"store": store, "address": address, "price": price, "comment_total": commentTotal},
+		[]string{
+			"store",         //店名
+			"address",       //地址
+			"price",         //价格
+			"comment_total", // 评价数
+			"5Star",         //5星评价数
+			"4Star",         //4星评价数
+			"3Star",         //3星评价数
+			"2Star",         //2星评价数
+			"1Star"},        //1星评价数
+		map[string]interface{}{
+			"store":         store,
+			"address":       address,
+			"price":         price,
+			"comment_total": commentTotal,
+			"5Star":         comment5Star,
+			"4Star":         comment4Star,
+			"3Star":         comment3Star,
+			"2Star":         comment2Star,
+			"1Star":         comment1Star,
+		},
 		[]string{"csv"},
 	)
 
