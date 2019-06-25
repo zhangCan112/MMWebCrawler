@@ -91,7 +91,9 @@ func (c *crawler) work() {
 	}
 
 	its := rw.Items()
-	c.pl.Write(its[0], its[1:]...)
+	if len(its) > 0 {
+		c.pl.Write(its[0], its[1:]...)
+	}
 }
 
 func (c *crawler) Stop() {
