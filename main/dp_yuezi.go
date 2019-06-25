@@ -26,18 +26,18 @@ var dpSpider = spider.SpiderFunc(func(rw spider.ResultWriter, doc *goquery.Docum
 
 //  listSpider 点评月子中心列表页Spider
 var listSpider = spider.SpiderFunc(func(rw spider.ResultWriter, doc *goquery.Document) {
-	doc.Find(".tg-floor-item").Each(func(i int, s *goquery.Selection) {
-		title := webcrawler.WrapedString(s.Find(".tg-floor-item-wrap .tg-floor-title h3").Text()).TrimSpace().FilterLineBreaks().Unwrap()
-		subTitle := webcrawler.WrapedString(s.Find(".tg-floor-item-wrap .tg-floor-title h4").Text()).TrimSpace().FilterLineBreaks().Unwrap()
-		price := webcrawler.WrapedString(s.Find(".tg-floor-item-wrap .tg-floor-price-new em").Text()).TrimSpace().FilterLineBreaks().Unwrap()
-		it := pipeline.NewItem(
-			"DianPing",
-			[]string{"title", "subTitle", "price"},
-			map[string]interface{}{"title": title, "subTitle": subTitle, "price": price},
-			[]string{"csv"},
-		)
-		rw.AddItem(it)
-		rw.AddURL("http://t.dianping.com/list/xian?q=月子中心")
+	doc.Find("#J_boxList ul li[data-shopid]").Each(func(i int, s *goquery.Selection) {
+		url, ok := s.Find("a[href]").Attr("href")
+		if ok {
+			rw.AddURL("http:" + url)
+		}
+	})
+
+	doc.Find("#J_boxList .Pages .PageLink").Each(func(i int, s *goquery.Selection) {
+		url, ok := s.Attr("href")
+		if ok {
+			rw.AddURL("http://www.dianping.com" + url)
+		}
 	})
 })
 

@@ -25,6 +25,11 @@ func (opstr OperableString) TrimPrefix(prefix string) OperableString {
 	return WrapedString(strings.TrimPrefix(opstr.Unwrap(), prefix))
 }
 
+// TrimSuffix 返回去除s可能的后缀suffix的字符串。
+func (opstr OperableString) TrimSuffix(suffix string) OperableString {
+	return WrapedString(strings.TrimSuffix(opstr.Unwrap(), suffix))
+}
+
 // FilterLineBreaks 过滤掉换行符
 func (opstr OperableString) FilterLineBreaks() OperableString {
 	return WrapedString(strings.Replace(opstr.Unwrap(), "\n", "", -1))

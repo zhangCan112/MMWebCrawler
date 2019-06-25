@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"math/rand"
 	"net/http"
+	"net/url"
 
 	"github.com/PuerkitoBio/goquery"
 )
@@ -33,8 +34,8 @@ func NewDownloader() *Downloader {
 }
 
 // Download 对指定url发起请求
-func (dl *Downloader) Download(url string) (doc *goquery.Document, err error) {
-	res, err := get(url)
+func (dl *Downloader) Download(rawurl string) (doc *goquery.Document, err error) {
+	res, err := get(rawurl)
 	if err != nil {
 		return nil, err
 	}
@@ -46,7 +47,8 @@ func (dl *Downloader) Download(url string) (doc *goquery.Document, err error) {
 
 	// Load the HTML document
 	doc, _ = goquery.NewDocumentFromReader(res.Body)
-
+	url, _ := url.Parse(rawurl)
+	doc.Url = url
 	return doc, nil
 }
 
