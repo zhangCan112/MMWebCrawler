@@ -20,6 +20,11 @@ func (opstr OperableString) TrimSpace() OperableString {
 	return WrapedString(strings.TrimSpace(opstr.Unwrap()))
 }
 
+// TrimPrefix 返回去除s可能的前缀prefix的字符串。
+func (opstr OperableString) TrimPrefix(prefix string) OperableString {
+	return WrapedString(strings.TrimPrefix(opstr.Unwrap(), prefix))
+}
+
 // FilterLineBreaks 过滤掉换行符
 func (opstr OperableString) FilterLineBreaks() OperableString {
 	return WrapedString(strings.Replace(opstr.Unwrap(), "\n", "", -1))
