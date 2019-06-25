@@ -26,10 +26,12 @@ var dpSpider = spider.SpiderFunc(func(rw spider.ResultWriter, doc *goquery.Docum
 
 //  listSpider 点评月子中心列表页Spider
 var listSpider = spider.SpiderFunc(func(rw spider.ResultWriter, doc *goquery.Document) {
+	println("启动解析:listSpider")
 	doc.Find("#J_boxList ul li[data-shopid]").Each(func(i int, s *goquery.Selection) {
 		url, ok := s.Find("a[href]").Attr("href")
 		if ok {
 			rw.AddURL("http:" + url)
+			println("add:" + url)
 		}
 	})
 
@@ -37,6 +39,7 @@ var listSpider = spider.SpiderFunc(func(rw spider.ResultWriter, doc *goquery.Doc
 		url, ok := s.Attr("href")
 		if ok {
 			rw.AddURL("http://www.dianping.com" + url)
+			println("add:" + url)
 		}
 	})
 })
